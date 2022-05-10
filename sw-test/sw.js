@@ -1,3 +1,4 @@
+console.log('begain1');
 const addResourcesToCache = async (resources) => {
   const cache = await caches.open('v1');
   await cache.addAll(resources);
@@ -11,6 +12,7 @@ const putInCache = async (request, response) => {
 };
 
 const cacheFirst = async ({ request, preloadResponsePromise, fallbackUrl }) => {
+  console.log(request.url, 'rrr');
   // First try to get the resource from the cache
   const responseFromCache = await caches.match(request);
   if (responseFromCache) {
@@ -18,12 +20,12 @@ const cacheFirst = async ({ request, preloadResponsePromise, fallbackUrl }) => {
   }
 
   // Next try to use the preloaded response, if it's there
-  const preloadResponse = await preloadResponsePromise;
-  if (preloadResponse) {
-    console.info('using preload response', preloadResponse);
-    putInCache(request, preloadResponse.clone());
-    return preloadResponse;
-  }
+  // const preloadResponse = await preloadResponsePromise;
+  // if (preloadResponse) {
+  //   console.info('using preload response', preloadResponse);
+  //   putInCache(request, preloadResponse.clone());
+  //   return preloadResponse;
+  // }
 
   // Next try to get the resource from the network
   try {
@@ -56,9 +58,14 @@ const enableNavigationPreload = async () => {
 };
 
 self.addEventListener('activate', (event) => {
-  console.log('activate-----------------', event);
+  console.log('activate', event);
   event.waitUntil(enableNavigationPreload());
 });
+
+self.addEventListener('sync', (event) => {
+  console.log(event, 'sync');
+})
+
 
 self.addEventListener('install', (event) => {
   console.log('install', event);
@@ -68,17 +75,15 @@ self.addEventListener('install', (event) => {
       '/sw-test/index.html',
       '/sw-test/app.js',
       '/sw-test/image-list.js',
-      '/sw-test/star-wars-logo.jpg',
       '/sw-test/gallery/bountyHunters.jpg',
       '/sw-test/gallery/myLittleVader.jpg',
       '/sw-test/gallery/snowTroopers.jpg',
     ])
   );
-  // event.waitUntil(self.skipWaiting());
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('fetch', (event) => {
-  console.log('fetch', event);
   event.respondWith(
     cacheFirst({
       request: event.request,
